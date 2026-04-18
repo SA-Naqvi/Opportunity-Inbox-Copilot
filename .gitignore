@@ -1,0 +1,97 @@
+# ─── Python / Backend ────────────────────────────────────────────────────────
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.env.local
+
+# Environment variables (contains API keys — never commit)
+.env
+backend/.env
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# pytest cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# mypy / ruff / pyright caches
+.mypy_cache/
+.ruff_cache/
+.pyright/
+
+# Logs
+*.log
+
+
+# ─── Node / Frontend ─────────────────────────────────────────────────────────
+
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Vite build output
+frontend/dist/
+frontend/.vite/
+
+# Env files (Vite reads VITE_* vars)
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# package-lock / yarn lock (keep whichever your team uses; adjust if needed)
+# package-lock.json
+# yarn.lock
+
+
+# ─── IDEs & editors ──────────────────────────────────────────────────────────
+
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Cursor
+.cursor/
+
+
+# ─── OS ──────────────────────────────────────────────────────────────────────
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+
+# ─── Misc ────────────────────────────────────────────────────────────────────
+
+# Temporary files
+*.tmp
+*.bak
+*.orig
+
+# Jupyter notebooks (checkpoints)
+.ipynb_checkpoints/
