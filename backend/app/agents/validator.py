@@ -2,7 +2,7 @@
 Agent 3 — Validator
 
 Normalises dates, cleans lists, and flags completeness / suspicious issues.
-Model: google/gemini-flash-1.5 (structured cleaning task)
+Model: llama-3.3-70b-versatile (single model — structured cleaning task)
 """
 
 from __future__ import annotations

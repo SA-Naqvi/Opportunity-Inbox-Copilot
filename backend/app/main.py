@@ -80,11 +80,11 @@ async def health_check():
         "service": "Opportunity Inbox Copilot",
         "version": "1.0.0",
         "pipeline": [
-            "1. Classifier  (gemini-2.0-flash-lite)",
-            "2. Extractor   (gemini-2.5-flash)",
-            "3. Validator   (gemini-2.0-flash-lite)",
-            "4. Scoring     (deterministic + gemini-embedding-001)",
-            "5. Ranker      (gemini-2.5-flash)",
+            "1. Classifier  (llama-3.3-70b-versatile — Groq 280 TPS)",
+            "2. Extractor   (llama-3.3-70b-versatile — Groq 280 TPS)",
+            "3. Validator   (llama-3.3-70b-versatile — Groq 280 TPS)",
+            "4. Scoring     (deterministic + keyword matching)",
+            "5. Ranker      (llama-3.3-70b-versatile — Groq 280 TPS)",
         ],
     }
 

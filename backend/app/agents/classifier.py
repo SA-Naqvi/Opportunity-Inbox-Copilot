@@ -2,7 +2,7 @@
 Agent 1 — Classifier
 
 Determines whether each email contains a REAL student opportunity.
-Model: google/gemini-flash-1.5 (fast, cheap — binary classification task)
+Model: llama-3.3-70b-versatile (single model — binary classification task)
 """
 
 from __future__ import annotations
