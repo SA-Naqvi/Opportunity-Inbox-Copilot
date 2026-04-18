@@ -348,8 +348,9 @@ export default function App() {
   const [skillsText,     setSkillsText]     = useState(DEFAULT_PROFILE.skills.join(', '));
   const [interestsText,  setInterestsText]  = useState(DEFAULT_PROFILE.interests.join(', '));
   const [expText,        setExpText]        = useState(DEFAULT_PROFILE.past_experience.join('\n'));
-  const [gmailAddress,   setGmailAddress]   = useState('');
-  const [calendarName,   setCalendarName]   = useState('primary');
+  const [gmailAddress,     setGmailAddress]     = useState('');
+  const [gmailAppPassword, setGmailAppPassword] = useState('');
+  const [calendarName,     setCalendarName]     = useState('primary');
   const [profileSetupDone, setProfileSetupDone] = useState(false);
 
   // ── Pipeline result ─────────────────────────────────────────────────────────
@@ -462,13 +463,14 @@ export default function App() {
   };
 
   // ── Setup complete (OnboardingForm → onboard) ────────────────────────────────
-  const handleSetupComplete = ({ name, profile: p, gmailAddress: g, calendarName: c }) => {
+  const handleSetupComplete = ({ name, profile: p, gmailAddress: g, gmailAppPassword: pw, calendarName: c }) => {
     setStudentName(name);
     setProfile(p);
     setSkillsText(p.skills.join(', '));
     setInterestsText(p.interests.join(', '));
     setExpText(p.past_experience.join('\n'));
     setGmailAddress(g);
+    setGmailAppPassword(pw || '');
     setCalendarName(c);
     setProfileSetupDone(true);
     setStep('onboard');
@@ -667,6 +669,7 @@ export default function App() {
               {/* Auto-import from Gmail */}
               <GmailImport
                 gmailAddress={gmailAddress}
+                gmailAppPassword={gmailAppPassword}
                 onImport={(list) => {
                   addEmailsBatch(list);
                 }}

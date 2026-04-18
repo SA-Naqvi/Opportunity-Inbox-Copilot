@@ -54,14 +54,14 @@ function SpinnerIcon({ size = 14 }) {
 
 // ─── GmailImport ──────────────────────────────────────────────────────────────
 
-export default function GmailImport({ gmailAddress = '', onImport }) {
+export default function GmailImport({ gmailAddress = '', gmailAppPassword = '', onImport }) {
   // ui state
   const [open,    setOpen]    = useState(false);
   const [phase,   setPhase]   = useState('config'); // 'config' | 'loading' | 'results'
 
-  // form
+  // form — pre-fill from onboarding if provided
   const [email,    setEmail]    = useState(gmailAddress);
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState(gmailAppPassword);
   const [count,    setCount]    = useState(15);
   const [showPass, setShowPass] = useState(false);
 
@@ -207,9 +207,9 @@ export default function GmailImport({ gmailAddress = '', onImport }) {
           display:    'inline-flex', alignItems: 'center', gap: 6,
           padding:    '6px 13px', borderRadius: 8, cursor: 'pointer',
           fontSize:   12, fontWeight: 700, fontFamily: "'DM Sans', sans-serif",
-          background: open ? C.indigo + '14' : C.bg,
-          color:      open ? C.indigo : C.slate,
-          border:     `1px solid ${open ? C.indigo + '40' : C.border}`,
+          background: open ? C.indigo + '14' : email && password ? C.emerald + '12' : C.bg,
+          color:      open ? C.indigo : email && password ? C.emerald : C.slate,
+          border:     `1px solid ${open ? C.indigo + '40' : email && password ? C.emerald + '50' : C.border}`,
           transition: 'all 0.15s',
         }}
       >
@@ -218,7 +218,7 @@ export default function GmailImport({ gmailAddress = '', onImport }) {
           <path d="M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z" stroke="currentColor" strokeWidth="1.8" fill="none"/>
           <path d="M2 6l10 7 10-7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
         </svg>
-        Auto-import Gmail
+        {email && password ? '✓ Gmail ready' : 'Auto-import Gmail'}
         <span style={{
           marginLeft: 2, fontSize: 10,
           transform: open ? 'rotate(180deg)' : 'none',
@@ -324,7 +324,8 @@ export default function GmailImport({ gmailAddress = '', onImport }) {
                 </div>
               )}
 
-              {/* Info callout */}
+              {/* Info callout — only show if password wasn't pre-filled from onboarding */}
+              {!gmailAppPassword && (
               <div style={{
                 fontSize: 11.5, color: C.slate,
                 background: C.amber + '11', border: `1px solid ${C.amber}33`,
@@ -334,6 +335,7 @@ export default function GmailImport({ gmailAddress = '', onImport }) {
                 Google Account → Security → 2-Step Verification → App Passwords → Create one for "Mail".
                 Use the 16-character code above (not your real password).
               </div>
+              )}
 
               {/* Action */}
               <button className="gi-btn-primary" onClick={handleFetch} style={{ width: '100%', justifyContent: 'center' }}>

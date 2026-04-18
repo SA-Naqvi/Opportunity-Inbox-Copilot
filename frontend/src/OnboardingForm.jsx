@@ -111,6 +111,7 @@ const DEFAULT_FORM = {
   location_preference:         'Pakistan / Remote',
   past_experience:             ['ICPC 2024 participant'],
   gmail_address:               '',
+  gmail_app_password:          '',
   calendar_name:               'primary',
 };
 
@@ -892,6 +893,11 @@ function Step5Exp({ data, update }) {
 // ─── Step 6 — Connect ─────────────────────────────────────────────────────────
 
 function Step6Connect({ data, update }) {
+  const [showPass, setShowPass] = React.useState(false);
+
+  const bothSet   = data.gmail_address && data.gmail_app_password;
+  const emailOnly = data.gmail_address && !data.gmail_app_password;
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
       <div style={{ textAlign: 'center', marginBottom: 2 }}>
@@ -899,13 +905,14 @@ function Step6Connect({ data, update }) {
           Connect Your Tools
         </h2>
         <p style={{ fontSize: 13, color: G.textMuted }}>
-          Optional — enables Gmail reply drafts and automatic Google Calendar scheduling.
+          Set up Gmail auto-import and Google Calendar scheduling here — no re-entering later.
         </p>
       </div>
 
       {/* Gmail card */}
       <div className="of-int-card">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+        {/* Card header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
           <div style={{
             width: 38, height: 38, borderRadius: 10,
             background: 'linear-gradient(135deg,#ea4335,#fbbc05)',
@@ -913,36 +920,105 @@ function Step6Connect({ data, update }) {
           }}>📧</div>
           <div>
             <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', fontFamily: "'DM Sans',sans-serif" }}>Gmail</div>
-            <div style={{ fontSize: 11.5, color: G.textMuted }}>Sends reply drafts to your Drafts folder</div>
+            <div style={{ fontSize: 11.5, color: G.textMuted }}>Auto-import emails + push reply drafts</div>
           </div>
-          {data.gmail_address && (
+          {/* Status badge */}
+          {bothSet && (
             <span style={{
               marginLeft: 'auto', fontSize: 10.5, fontWeight: 700, color: G.emerald,
               background: 'rgba(16,185,129,0.15)', borderRadius: 6, padding: '2px 8px',
               border: '1px solid rgba(16,185,129,0.3)', fontFamily: "'DM Sans',sans-serif",
-            }}>✓ Set</span>
+            }}>✓ Ready</span>
+          )}
+          {emailOnly && (
+            <span style={{
+              marginLeft: 'auto', fontSize: 10.5, fontWeight: 700, color: G.amber,
+              background: 'rgba(245,158,11,0.15)', borderRadius: 6, padding: '2px 8px',
+              border: '1px solid rgba(245,158,11,0.3)', fontFamily: "'DM Sans',sans-serif",
+            }}>⚠ Need App Password</span>
           )}
         </div>
-        <input
-          type="email"
-          className="of-glass-input"
-          style={glassInput}
-          placeholder="your.email@gmail.com"
-          value={data.gmail_address}
-          onChange={e => update('gmail_address', e.target.value)}
-        />
-        <div style={{ fontSize: 11, color: G.textFaint, marginTop: 7, display: 'flex', gap: 5, alignItems: 'flex-start' }}>
-          <span>ℹ</span>
-          <span>Enables the "Push to Gmail Draft" feature in Reply Suggester. Full OAuth2 in production.</span>
+
+        {/* Gmail address */}
+        <div style={{ marginBottom: 12 }}>
+          <label style={{ fontSize: 11, fontWeight: 700, color: G.textFaint, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 7 }}>
+            Gmail Address
+          </label>
+          <input
+            type="email"
+            className="of-glass-input"
+            style={glassInput}
+            placeholder="your.email@gmail.com"
+            value={data.gmail_address}
+            onChange={e => update('gmail_address', e.target.value)}
+          />
         </div>
-        {/* Features unlocked */}
-        <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
-          {['Reply Suggester', '3 tone variants', 'One-click draft'].map(f => (
+
+        {/* App Password */}
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 7 }}>
+            <label style={{ fontSize: 11, fontWeight: 700, color: G.textFaint, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              App Password
+            </label>
+            <a
+              href="https://myaccount.google.com/apppasswords"
+              target="_blank"
+              rel="noreferrer"
+              style={{ fontSize: 11, color: 'rgba(79,70,229,0.8)', textDecoration: 'none' }}
+            >
+              Get one ↗
+            </a>
+          </div>
+          <div style={{ position: 'relative' }}>
+            <input
+              type={showPass ? 'text' : 'password'}
+              className="of-glass-input"
+              style={{
+                ...glassInput,
+                fontFamily: showPass ? "'DM Sans',sans-serif" : 'monospace',
+                letterSpacing: showPass ? 0 : '0.2em',
+                paddingRight: 44,
+              }}
+              placeholder="16-character code (not your password)"
+              value={data.gmail_app_password}
+              onChange={e => update('gmail_app_password', e.target.value)}
+            />
+            <button
+              onClick={() => setShowPass(s => !s)}
+              style={{
+                position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                background: 'none', border: 'none', cursor: 'pointer',
+                fontSize: 14, color: G.textFaint,
+              }}
+              title={showPass ? 'Hide' : 'Show'}
+            >{showPass ? '🙈' : '👁'}</button>
+          </div>
+        </div>
+
+        {/* How-to callout */}
+        <div style={{
+          background: 'rgba(79,70,229,0.1)', border: '1px solid rgba(79,70,229,0.25)',
+          borderRadius: 10, padding: '10px 13px', fontSize: 11.5,
+          color: G.textMuted, lineHeight: 1.65,
+        }}>
+          <strong style={{ color: '#fff' }}>How to get an App Password:</strong>
+          <br />
+          Google Account → Security → 2-Step Verification → <strong style={{ color: '#c4b5fd' }}>App Passwords</strong> → Select "Mail" → Copy the 16-character code.
+          <br />
+          <span style={{ color: G.textFaint }}>This is not your Google password — it's a one-time access code.</span>
+        </div>
+
+        {/* Features badges */}
+        <div style={{ display: 'flex', gap: 6, marginTop: 12, flexWrap: 'wrap' }}>
+          {['Auto-import emails', 'Reply Suggester', 'One-click draft'].map(f => (
             <span key={f} style={{
-              fontSize: 10.5, background: 'rgba(79,70,229,0.15)', color: 'rgba(79,70,229,0.9)',
-              border: '1px solid rgba(79,70,229,0.3)', borderRadius: 6, padding: '2px 8px',
+              fontSize: 10.5,
+              background: bothSet ? 'rgba(16,185,129,0.15)' : 'rgba(79,70,229,0.12)',
+              color:      bothSet ? G.emerald : 'rgba(167,139,250,0.9)',
+              border:     `1px solid ${bothSet ? 'rgba(16,185,129,0.3)' : 'rgba(79,70,229,0.25)'}`,
+              borderRadius: 6, padding: '2px 8px',
               fontFamily: "'DM Sans',sans-serif",
-            }}>✓ {f}</span>
+            }}>{bothSet ? '✓' : '○'} {f}</span>
           ))}
         </div>
       </div>
@@ -981,9 +1057,9 @@ function Step6Connect({ data, update }) {
         {/* 3 events created */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 12 }}>
           {[
-            { icon: '📋', label: 'Prep session',   sub: '2 days before deadline · 6–8 PM',  color: G.indigo },
-            { icon: '✅', label: 'Final review',   sub: '1 day before deadline · 7–8 PM',   color: G.amber  },
-            { icon: '🔥', label: 'Deadline event', sub: 'Day of deadline · All day',          color: G.rose   },
+            { icon: '📋', label: 'Prep session',   sub: '2 days before deadline · 6–8 PM' },
+            { icon: '✅', label: 'Final review',   sub: '1 day before deadline · 7–8 PM'  },
+            { icon: '🔥', label: 'Deadline event', sub: 'Day of deadline · All day'         },
           ].map(e => (
             <div key={e.label} style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 12 }}>
               <span style={{ fontSize: 14 }}>{e.icon}</span>
@@ -1042,7 +1118,11 @@ function Step7Review({ data }) {
         <Row icon="💡" label="Interests"  value={interestsTx || '—'} />
         <Row icon="📍" label="Location"   value={data.location_preference || '—'} />
         <Row icon="💰" label="Need-based" value={data.financial_need ? '✓ Yes — stipend opportunities prioritized' : 'Not marked'} />
-        <Row icon="🔗" label="Gmail"      value={data.gmail_address || <span style={{ color: G.textFaint }}>Not connected (optional)</span>} />
+        <Row icon="🔗" label="Gmail"      value={
+          data.gmail_address
+            ? <span>{data.gmail_address} {data.gmail_app_password ? <span style={{ color: G.emerald }}>· ✓ App Password set</span> : <span style={{ color: G.amber }}>· ⚠ No App Password</span>}</span>
+            : <span style={{ color: G.textFaint }}>Not connected (optional)</span>
+        } />
         <Row icon="📅" label="Calendar"   value={data.calendar_name} />
       </div>
 
@@ -1101,9 +1181,10 @@ export default function OnboardingForm({ onComplete }) {
     } else {
       // Complete
       onComplete({
-        name:         data.name,
-        gmailAddress: data.gmail_address,
-        calendarName: data.calendar_name,
+        name:            data.name,
+        gmailAddress:    data.gmail_address,
+        gmailAppPassword: data.gmail_app_password,
+        calendarName:    data.calendar_name,
         profile: {
           degree:                      data.degree,
           semester:                    data.semester,
