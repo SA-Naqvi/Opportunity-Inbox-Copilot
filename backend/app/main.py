@@ -34,6 +34,7 @@ from .pipeline import run_pipeline
 from .scoring import score_opportunity
 from .agents.classifier import ClassifierAgent
 from .sample_data import SAMPLE_EMAILS, DEFAULT_STUDENT_PROFILE
+from .email_fetcher import fetch_gmail_emails
 
 # ── Logging ──────────────────────────────────────────────────────────────────
 
@@ -79,11 +80,11 @@ async def health_check():
         "service": "Opportunity Inbox Copilot",
         "version": "1.0.0",
         "pipeline": [
-            "1. Classifier  (gemini-2.5-flash-lite)",
+            "1. Classifier  (gemini-2.0-flash-lite)",
             "2. Extractor   (gemini-2.5-flash)",
-            "3. Validator   (gemini-2.5-flash-lite)",
+            "3. Validator   (gemini-2.0-flash-lite)",
             "4. Scoring     (deterministic + gemini-embedding-001)",
-            "5. Ranker      (gemini-2.5-pro)",
+            "5. Ranker      (gemini-2.5-flash)",
         ],
     }
 
@@ -126,6 +127,61 @@ async def run_full_pipeline(request: PipelineRequest):
     except Exception as exc:
         logger.exception("Unexpected pipeline error")
         raise HTTPException(status_code=500, detail=f"Internal error: {exc}")
+
+
+# ── Gmail Email Fetch ─────────────────────────────────────────────────────────
+
+class FetchEmailsRequest(BaseModel):
+    email_address: str
+    app_password:  str
+    max_emails:    int = 20
+    folder:        str = "INBOX"
+
+
+@app.post("/api/fetch-emails")
+async def fetch_emails_endpoint(request: FetchEmailsRequest):
+    """
+    Fetch emails from Gmail via IMAP using an App Password.
+
+    Requires:
+      1. IMAP enabled in Gmail settings (Settings → See all → Forwarding and POP/IMAP)
+      2. A Gmail App Password (Google Account → Security → 2-Step Verification → App Passwords)
+         OR, for accounts without 2FA, "Less Secure App Access" enabled.
+
+    Returns a list of { subject, sender, date, body } objects.
+    """
+    if not request.email_address or "@" not in request.email_address:
+        raise HTTPException(status_code=422, detail="Invalid email address.")
+    if not request.app_password:
+        raise HTTPException(status_code=422, detail="App password is required.")
+    if not (1 <= request.max_emails <= 50):
+        raise HTTPException(status_code=422, detail="max_emails must be between 1 and 50.")
+
+    logger.info("IMAP fetch: %s, folder=%s, max=%d", request.email_address, request.folder, request.max_emails)
+    try:
+        emails = await fetch_gmail_emails(
+            request.email_address,
+            request.app_password,
+            request.max_emails,
+            request.folder,
+        )
+        return {"emails": emails, "count": len(emails)}
+
+    except Exception as exc:
+        msg = str(exc)
+        # Identify auth failures specifically
+        if any(k in msg for k in ["[AUTHENTICATIONFAILED]", "Invalid credentials", "LOGIN failed", "authentication"]):
+            raise HTTPException(
+                status_code=401,
+                detail=(
+                    "Gmail authentication failed. "
+                    "Make sure IMAP is enabled and you are using an App Password "
+                    "(not your Google account password). "
+                    f"Details: {msg}"
+                ),
+            )
+        logger.exception("IMAP fetch error for %s", request.email_address)
+        raise HTTPException(status_code=500, detail=f"Email fetch failed: {msg}")
 
 
 # ── Run with Sample Data ─────────────────────────────────────────────────────

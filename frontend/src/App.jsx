@@ -10,6 +10,8 @@ import EmailReplySuggester from './EmailReplySuggester';
 import CalendarBlocker from './CalendarBlocker';
 import SisterOpportunityFinder from './SisterOpportunityFinder';
 import LandingPage from './LandingPage';
+import OnboardingForm from './OnboardingForm';
+import GmailImport from './GmailImport';
 
 // ─── Theme ────────────────────────────────────────────────────────────────────
 
@@ -333,7 +335,7 @@ const PIPELINE_STAGES = [
 export default function App() {
 
   // ── Step state ──────────────────────────────────────────────────────────────
-  const [step, setStep] = useState('landing'); // 'landing' | 'onboard' | 'processing' | 'dashboard'
+  const [step, setStep] = useState('landing'); // 'landing' | 'setup' | 'onboard' | 'processing' | 'dashboard'
 
   // ── Onboarding: email input ─────────────────────────────────────────────────
   const [emails,       setEmails]       = useState([]);
@@ -341,11 +343,14 @@ export default function App() {
   const [emailError,   setEmailError]   = useState('');
 
   // ── Onboarding: student profile ─────────────────────────────────────────────
-  const [studentName,    setStudentName]    = useState('Ali Hassan');
+  const [studentName,    setStudentName]    = useState('');
   const [profile,        setProfile]        = useState(DEFAULT_PROFILE);
   const [skillsText,     setSkillsText]     = useState(DEFAULT_PROFILE.skills.join(', '));
   const [interestsText,  setInterestsText]  = useState(DEFAULT_PROFILE.interests.join(', '));
   const [expText,        setExpText]        = useState(DEFAULT_PROFILE.past_experience.join('\n'));
+  const [gmailAddress,   setGmailAddress]   = useState('');
+  const [calendarName,   setCalendarName]   = useState('primary');
+  const [profileSetupDone, setProfileSetupDone] = useState(false);
 
   // ── Pipeline result ─────────────────────────────────────────────────────────
   const [result,     setResult]     = useState(null);
@@ -381,6 +386,18 @@ export default function App() {
     setEmails(prev => {
       const next = prev.filter(e => e.id !== id);
       return next.map((e, i) => ({ ...e, id: `email_${String(i + 1).padStart(3, '0')}` }));
+    });
+  };
+
+  // Batch-add emails imported from Gmail (subject + body objects)
+  const addEmailsBatch = (list) => {
+    setEmails(prev => {
+      const newEmails = list.map((e, i) => ({
+        id:      `email_${String(prev.length + i + 1).padStart(3, '0')}`,
+        subject: e.subject || '(no subject)',
+        body:    e.body    || '',
+      }));
+      return [...prev, ...newEmails];
     });
   };
 
@@ -442,6 +459,19 @@ export default function App() {
     setStep('landing');
     setResult(null);
     setSelectedRow(null);
+  };
+
+  // ── Setup complete (OnboardingForm → onboard) ────────────────────────────────
+  const handleSetupComplete = ({ name, profile: p, gmailAddress: g, calendarName: c }) => {
+    setStudentName(name);
+    setProfile(p);
+    setSkillsText(p.skills.join(', '));
+    setInterestsText(p.interests.join(', '));
+    setExpText(p.past_experience.join('\n'));
+    setGmailAddress(g);
+    setCalendarName(c);
+    setProfileSetupDone(true);
+    setStep('onboard');
   };
 
   // ── Derived data from result ────────────────────────────────────────────────
@@ -546,6 +576,57 @@ export default function App() {
         </p>
       </div>
 
+      {/* Profile summary bar (shown after OnboardingForm setup) */}
+      {profileSetupDone && (
+        <div style={{
+          ...card, marginBottom: 20,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          flexWrap: 'wrap', gap: 12,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: '50%',
+              background: C.indigo + '18', color: C.indigo,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 18, flexShrink: 0,
+            }}>👤</div>
+            <div>
+              <div style={{ fontWeight: 700, color: C.text, fontSize: 14 }}>{studentName}</div>
+              <div style={{ fontSize: 12, color: C.slate }}>
+                {profile.degree} · Semester {profile.semester} · CGPA {profile.cgpa.toFixed(1)}
+                {gmailAddress && <span style={{ color: C.emerald, marginLeft: 8 }}>✓ Gmail</span>}
+                {calendarName && <span style={{ color: C.indigo, marginLeft: 6 }}>✓ Calendar</span>}
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+              {profile.skills.slice(0, 3).map(s => (
+                <span key={s} style={{
+                  fontSize: 11, background: C.indigo + '14', color: C.indigo,
+                  borderRadius: 6, padding: '2px 8px', border: `1px solid ${C.indigo}33`,
+                  fontWeight: 600, fontFamily: "'DM Sans', sans-serif",
+                }}>{s}</span>
+              ))}
+              {profile.skills.length > 3 && (
+                <span style={{ fontSize: 11, color: C.slate, padding: '2px 4px' }}>
+                  +{profile.skills.length - 3} more
+                </span>
+              )}
+            </div>
+            <button
+              onClick={() => setStep('setup')}
+              style={{
+                padding: '5px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                border: `1px solid ${C.border}`, background: C.bg, color: C.slate,
+                cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+                transition: 'all 0.15s',
+              }}
+            >✏ Edit Profile</button>
+          </div>
+        </div>
+      )}
+
       {/* How it works */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
         {[
@@ -568,17 +649,28 @@ export default function App() {
         ))}
       </div>
 
-      {/* Main 2-column layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 20, marginBottom: 20 }}>
+      {/* Main layout — full width if profile already set, 2-col otherwise */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: profileSetupDone ? '1fr' : '1fr 360px',
+        gap: 20, marginBottom: 20,
+      }}>
 
         {/* ── Left: Email inbox ── */}
         <div style={card}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <h3 style={{ ...serif, fontSize: 17, color: C.text }}>Email Inbox</h3>
               {emails.length > 0 && <Badge color={C.indigo}>{emails.length} email{emails.length !== 1 ? 's' : ''}</Badge>}
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+              {/* Auto-import from Gmail */}
+              <GmailImport
+                gmailAddress={gmailAddress}
+                onImport={(list) => {
+                  addEmailsBatch(list);
+                }}
+              />
               {emails.length > 0 && (
                 <BtnGhost onClick={() => setEmails([])}>Clear all</BtnGhost>
               )}
@@ -683,7 +775,8 @@ export default function App() {
           )}
         </div>
 
-        {/* ── Right: Student Profile Form ── */}
+        {/* ── Right: Student Profile Form (shown only when setup not yet done) ── */}
+        {!profileSetupDone && (
         <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: 13 }}>
           <h3 style={{ ...serif, fontSize: 17, color: C.text, margin: 0 }}>Student Profile</h3>
 
@@ -824,6 +917,7 @@ export default function App() {
             />
           </div>
         </div>
+        )}
       </div>
 
       {/* API error */}
@@ -1328,7 +1422,7 @@ export default function App() {
       `}</style>
 
       {/* ── Sticky header — hidden on landing (landing has its own nav) ── */}
-      {step !== 'landing' && (
+      {step !== 'landing' && step !== 'setup' && (
       <header style={{
         background: C.card, borderBottom: `1px solid ${C.border}`,
         padding: '0 32px', height: 60,
@@ -1393,7 +1487,8 @@ export default function App() {
       )}
 
       {/* ── Page content ── */}
-      {step === 'landing'   && <LandingPage onGetStarted={() => setStep('onboard')} />}
+      {step === 'landing'   && <LandingPage onGetStarted={() => setStep('setup')} />}
+      {step === 'setup'     && <OnboardingForm onComplete={handleSetupComplete} />}
       {step === 'onboard'    && renderOnboarding()}
       {step === 'processing' && renderProcessing()}
       {step === 'dashboard' && activeTab === 'reply'      && <EmailReplySuggester />}

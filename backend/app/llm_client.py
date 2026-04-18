@@ -3,7 +3,7 @@ Google Gemini LLM Client — calls Gemini models via Google AI Studio REST API.
 
 Model assignment strategy (each agent uses the model best suited to its task):
 
-  Agent 1 (Classifier)  → gemini-2.5-flash-lite
+  Agent 1 (Classifier)  → gemini-2.0-flash-lite
     Why: Simple binary classification (opportunity or not). Needs speed, not deep
     reasoning. Flash-Lite is the cheapest, fastest model — perfect for yes/no tasks.
     Free tier: 30 RPM / 1,500 RPD
@@ -14,7 +14,7 @@ Model assignment strategy (each agent uses the model best suited to its task):
     with speed — handles field-by-field extraction reliably.
     Free tier: 10 RPM / 500 RPD
 
-  Agent 3 (Validator)   → gemini-2.5-flash-lite
+  Agent 3 (Validator)   → gemini-2.0-flash-lite
     Why: Date normalization, list dedup, whitespace cleanup. Systematic but
     rule-based — no deep reasoning needed. Flash-Lite handles this efficiently.
     Free tier: 30 RPM / 1,500 RPD
@@ -29,6 +29,10 @@ Model assignment strategy (each agent uses the model best suited to its task):
   Embeddings            → gemini-embedding-001
     Why: Semantic skill/interest matching in scoring. "Machine Learning" should
     match "ML", "deep learning", etc. Current standard Gemini embedding model.
+
+NOTE: gemini-2.5-flash-lite is NOT used — it returns 403 for Google AI Studio
+free-tier keys (preview was shut down 2026-03-31; stable rollout incomplete).
+Use gemini-2.0-flash-lite instead, which is confirmed available on the free tier.
 """
 
 from __future__ import annotations
@@ -51,9 +55,9 @@ GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
 
 # ── Model constants (explicit per agent, chosen by task requirements) ────────
 
-CLASSIFIER_MODEL = "gemini-2.5-flash-lite"    # Agent 1 — fast binary classification  (30 RPM free)
+CLASSIFIER_MODEL = "gemini-2.0-flash-lite"    # Agent 1 — fast binary classification  (30 RPM free) — 2.5-flash-lite 403s on AI Studio keys
 EXTRACTOR_MODEL  = "gemini-2.5-flash"         # Agent 2 — structured field extraction (10 RPM free)
-VALIDATOR_MODEL  = "gemini-2.5-flash-lite"    # Agent 3 — rule-based cleaning          (30 RPM free)
+VALIDATOR_MODEL  = "gemini-2.0-flash-lite"    # Agent 3 — rule-based cleaning          (30 RPM free) — same reason
 RANKER_MODEL     = "gemini-2.5-flash"         # Agent 4 — reasoning & explanation      (10 RPM free)
 EMBEDDING_MODEL  = "gemini-embedding-001"      # Semantic similarity for scoring
 
